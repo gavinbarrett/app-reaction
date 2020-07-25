@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# initialize the directory with a package.json
+npm init -y
+
+# install production react libraries
+npm i react react-dom --save
+
+# install development build tools (babel, webpack)
+npm i webpack webpack-cli babel-loader @babel/core @babel/preset-react
+
+# set presets for parsing React code in a .babelrc.json file
+printf '{\n\t"presets": ["@babel/preset-react"]\n}' >> .babelrc.json
+
+# make source and distribution directories
+mkdir src
+mkdir dist
+
+# set up a basic html file
+printf "<!doctype html>\n<html>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' type='text/css' href='index.css'>\n\t</head>\n\n\t<body>\n\t\t<div id='root'/>\n\t\t<script type='module' src='./App.js'></script>\n\t</body>\n</html>" >> dist/index.html
+
+# set up a webpack config file
+printf "module.exports = {\n\tentry: 'src/App.jsx',\n\tmode: 'development',\n\tmodule: {\n\t\trules: [\n\t\t\t{\n\t\t\t\ttest: /\.(js|jsx)$/,\n\t\t\t\texclude: /node_modules/,\n\t\t\t\tuse: ['babel-loader'],\n\t\t\t}\n\t\t]\n\t},\n\tresolve: {\n\t\textensions: ['*', '.js', '.jsx']\n\t},\n\toutput: {\n\t\tfilename: 'App.js',\n\t\tpath: __dirname + '/dist',\n\t},\n};" >> webpack.config.js
