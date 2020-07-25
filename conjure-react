@@ -1,23 +1,151 @@
 #!/usr/bin/env bash
 
-# initialize the directory with a package.json
-npm init -y
 
-# install production react libraries
-npm i react react-dom --save
+init() {
+	# initialize the directory with a package.json
+	npm init -y
 
-# install development build tools (babel, webpack)
-npm i webpack webpack-cli babel-loader @babel/core @babel/preset-react
+	# install production react libraries
+	npm i react react-dom --save
 
-# set presets for parsing React code in a .babelrc.json file
-printf '{\n\t"presets": ["@babel/preset-react"]\n}' >> .babelrc.json
+	# install development build tools (babel, webpack)
+	npm i webpack webpack-cli babel-loader @babel/core @babel/preset-react
+}
 
-# make source and distribution directories
-mkdir src
-mkdir dist
+make_html() {
+	# set up a basic html file
+	printf "<!doctype html>\n<html>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' type='text/css' href='index.css'>\n\t</head>\n\n\t<body>\n\t\t<div id='root'/>\n\t\t<script type='module' src='$2/App.js'></script>\n\t</body>\n</html>" > $1/index.html
+}
 
-# set up a basic html file
-printf "<!doctype html>\n<html>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' type='text/css' href='index.css'>\n\t</head>\n\n\t<body>\n\t\t<div id='root'/>\n\t\t<script type='module' src='./App.js'></script>\n\t</body>\n</html>" >> dist/index.html
+make_css() {
+	# set up a basic css file
+	printf "html {\n\tbackground-color: 'red';\n}" > $1/index.css
+}
 
-# set up a webpack config file
-printf "module.exports = {\n\tentry: 'src/App.jsx',\n\tmode: 'development',\n\tmodule: {\n\t\trules: [\n\t\t\t{\n\t\t\t\ttest: /\.(js|jsx)$/,\n\t\t\t\texclude: /node_modules/,\n\t\t\t\tuse: ['babel-loader'],\n\t\t\t}\n\t\t]\n\t},\n\tresolve: {\n\t\textensions: ['*', '.js', '.jsx']\n\t},\n\toutput: {\n\t\tfilename: 'App.js',\n\t\tpath: __dirname + '/dist',\n\t},\n};" >> webpack.config.js
+make_react() {
+	# set up a basic React page
+	printf "import React from 'react';\nimport ReactDOM from 'react-dom';\n\nfunction App() {\n\treturn <p>This is a React App!</p>;\n}\n\nReactDOM.render(<App/>, document.getElementById('root'));" > src/App.jsx
+}
+
+make_babelrc() {
+	# set presets for parsing React code in a .babelrc.json file
+	printf '{\n\t"presets": ["@babel/preset-react"]\n}' > .babelrc.json
+}
+
+make_webpack() {
+	# set up a webpack config file
+	printf "module.exports = {\n\tentry: './$1/App.jsx',\n\tmode: 'development',\n\tmodule: {\n\t\trules: [\n\t\t\t{\n\t\t\t\ttest: /\.(js|jsx)$/,\n\t\t\t\texclude: /node_modules/,\n\t\t\t\tuse: ['babel-loader'],\n\t\t\t}\n\t\t]\n\t},\n\tresolve: {\n\t\textensions: ['*', '.js', '.jsx']\n\t},\n\toutput: {\n\t\tfilename: 'App.js',\n\t\tpath: __dirname + '/$2',\n\t},\n};" > webpack.config.js
+}
+
+make_express() {
+	# set up a basic express a server
+	printf "const express = require('express');\nconst app = express();\n\nconst port = process.env.PORT || 8080;\n\napp.use(express.static(__dirname + '/dist'));\n\napp.get('/', (req, res) => {\n\tres.render('index');\n});\n\napp.listen(port, () => {\n\tconsole.log('Listening on port', port, '...');\n});" > server.js
+}
+
+make_flask() {
+	printf "from flask import Flask, render_template\n\napp = Flask(__name__)\n\napp.route('/', methods=['GET'])\ndef landing():\n\treturn render_template('./index.html')\n\nif __name__ == '__main__':\n\tapp.run(debug=True)" > server.py
+}
+
+make_node() {
+	# install development/production libraries
+	init
+
+	# install the express server
+	npm i express --save
+
+	# make source and distribution directories
+	mkdir src
+	mkdir dist
+
+	# set up an html file
+	make_html dist .
+
+	# set up a css file
+	make_css dist
+
+	# set up a React page
+	make_react
+
+	# set up a server
+	make_express
+	
+	# set up a .babelrc file
+	make_babelrc
+
+	# setup a webpack config
+	make_webpack src dist
+
+	# bundle our javascript code into dist/App.js
+	npx webpack --config webpack.config.js
+
+	# start the server
+	node server.js &
+
+	# open app
+	firefox localhost:8080
+}
+
+make_python() {
+	init
+
+	virtualenv venv -p python3
+
+	source venv/bin/activate
+
+	# install flask
+	pip install flask
+	
+	# save the project modules
+	pip freeze > requirements.txt
+	
+	mkdir src
+	mkdir static
+	mkdir templates
+
+	# set up an html file
+	make_html templates ../static
+
+	# set up a css file
+	make_css static
+
+	# set up a React page
+	make_react
+
+	# set up a server
+	make_flask
+	
+	# set up a .babelrc file
+	make_babelrc
+
+	# setup a webpack config
+	make_webpack src static
+
+	# bundle our javascript code into dist/App.js
+	npx webpack --config webpack.config.js
+	
+	# run the flask server
+	python server.py &
+
+	# open the page in firefox
+	firefox localhost:5000
+
+	#deactivate
+}
+
+if [ $# -eq 0 ]
+then
+	printf 'Please choose a backend framework (either Node or Python)\nUsage: {./conjure-react node} or {./conjure-react python}\n'
+	exit
+fi
+
+if [[ "$1" == "node" ]]
+then
+	#printf "using node"
+	make_node
+elif [[ "$1" -eq "python" ]]
+then
+	make_python
+else
+	printf 'Please choose a backend framework (either Node or Python)\nUsage: {./conjure-react node} or {./conjure-react python}\n'
+	exit
+fi
