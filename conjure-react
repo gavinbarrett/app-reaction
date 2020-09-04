@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 
+NULL='/dev/null'
 
-init() {
+init_libs() {
+	printf "Installing React and build tools (Babel, Webpack).\n"
+
 	# initialize the directory with a package.json
-	npm init -y
+	npm init -y &> $NULL
 
 	# install production react libraries
-	npm i react react-dom --save
+	npm i react react-dom --save &> $NULL
 
 	# install development build tools (babel, webpack)
-	npm i webpack webpack-cli babel-loader @babel/core @babel/preset-react
+	npm i webpack webpack-cli babel-loader @babel/core @babel/preset-react --save-dev &> $NULL
 }
 
 make_html() {
 	# set up a basic html file
-	printf "<!doctype html>\n<html>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' type='text/css' href='index.css'>\n\t</head>\n\n\t<body>\n\t\t<div id='root'/>\n\t\t<script type='module' src='$2/App.js'></script>\n\t</body>\n</html>" > $1/index.html
+	printf "<!doctype html>\n<html>\n\t<head>\n\t\t<meta charset='utf-8'>\n\t\t<link rel='stylesheet' type='text/css' href='../static/index.css'>\n\t</head>\n\n\t<body>\n\t\t<div id='root'/>\n\t\t<script type='module' src='$2/App.js'></script>\n\t</body>\n</html>" > $1/index.html
 }
 
 make_css() {
 	# set up a basic css file
-	printf "html {\n\tbackground-color: 'red';\n}" > $1/index.css
+	printf "html {\n\twidth: 100vw;\n\theight: 100vh;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-items:center;\n\tmargin: 0;\n\tpadding: 0;\n\tbackground: #f01872;\n\tfont-size: 5vw;\n\tfont-family: 'Inconsolata', sans-serif\n\tcolor: #ffffff;\n}" > $1/index.css
 }
 
 make_react() {
 	# set up a basic React page
-	printf "import React from 'react';\nimport ReactDOM from 'react-dom';\n\nfunction App() {\n\treturn <p>This is a React App!</p>;\n}\n\nReactDOM.render(<App/>, document.getElementById('root'));" > src/App.jsx
+	printf "import React from 'react';\nimport ReactDOM from 'react-dom';\n\nfunction App() {\n\treturn <p>This page is made with React!</p>;\n}\n\nReactDOM.render(<App/>, document.getElementById('root'));" > src/App.jsx
 }
 
 make_babelrc() {
@@ -38,62 +41,69 @@ make_webpack() {
 }
 
 make_express() {
-	# set up a basic express a server
+	# set up a basic express server
 	printf "const express = require('express');\nconst app = express();\n\nconst port = process.env.PORT || 8080;\n\napp.use(express.static(__dirname + '/dist'));\n\napp.get('/', (req, res) => {\n\tres.render('index');\n});\n\napp.listen(port, () => {\n\tconsole.log('Listening on port', port, '...');\n});" > server.js
 }
 
 make_flask() {
-	printf "from flask import Flask, render_template\n\napp = Flask(__name__)\n\napp.route('/', methods=['GET'])\ndef landing():\n\treturn render_template('./index.html')\n\nif __name__ == '__main__':\n\tapp.run(debug=True)" > server.py
+	# set up a basic flask server
+	printf "from flask import Flask, render_template\n\napp = Flask(__name__)\n\n@app.route('/', methods=['GET'])\ndef landing():\n\treturn render_template('./index.html')\n\nif __name__ == '__main__':\n\tapp.run(debug=True)" > server.py
 }
 
 make_node() {
 	# install development/production libraries
-	init
-
+	init_libs
 	# install the express server
-	npm i express --save
-
+	npm i express --save &> $NULL
 	# make source and distribution directories
 	mkdir src
 	mkdir dist
 
+	printf "Setting up basic HTML/CSS.\n"
 	# set up an html file
 	make_html dist .
-
 	# set up a css file
 	make_css dist
-
+	
+	printf "Setting up a basic React page.\n"
 	# set up a React page
 	make_react
-
+	
+	printf "Installing Express.\n"
 	# set up a server
 	make_express
 	
+	printf "Setting build configuration.\n"
 	# set up a .babelrc file
 	make_babelrc
-
 	# setup a webpack config
 	make_webpack src dist
-
+	
+	printf "Building...\n"
 	# bundle our javascript code into dist/App.js
-	npx webpack --config webpack.config.js
-
+	npx webpack --config webpack.config.js &> $NULL
+	
 	# start the server
 	node server.js &
-
 	# open app
 	firefox localhost:8080
 }
 
 make_python() {
-	init
+	init_libs
+	
+	printf "Setting up a flask server.\n"
+	# set up a server
+	make_flask
 
-	virtualenv venv -p python3
+	printf "Installing a python virtual environment.\n"
+	virtualenv venv -p python3 &> $NULL
 
 	source venv/bin/activate
 
+	printf "Installing Flask.\n"
 	# install flask
-	pip install flask
+	pip install flask &> $NULL
 	
 	# save the project modules
 	pip freeze > requirements.txt
@@ -102,34 +112,33 @@ make_python() {
 	mkdir static
 	mkdir templates
 
+	printf "Setting up basic HTML/CSS.\n"
 	# set up an html file
 	make_html templates ../static
 
 	# set up a css file
 	make_css static
 
+	printf "Setting up a basic React page.\n"
 	# set up a React page
 	make_react
 
-	# set up a server
-	make_flask
-	
+	printf "Setting build configuration.\n"
 	# set up a .babelrc file
 	make_babelrc
 
 	# setup a webpack config
 	make_webpack src static
 
+	printf "Building...\n"
 	# bundle our javascript code into dist/App.js
-	npx webpack --config webpack.config.js
+	npx webpack --config webpack.config.js &> $NULL
 	
 	# run the flask server
 	python server.py &
 
 	# open the page in firefox
-	firefox localhost:5000
-
-	#deactivate
+	firefox localhost:5000 &
 }
 
 if [ $# -eq 0 ]
@@ -142,7 +151,7 @@ if [[ "$1" == "node" ]]
 then
 	#printf "using node"
 	make_node
-elif [[ "$1" -eq "python" ]]
+elif [[ "$1" == "python" ]]
 then
 	make_python
 else
