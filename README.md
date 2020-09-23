@@ -8,7 +8,6 @@ This script will install React with a Babel/Webpack configuration for bundling.
 # Usage
 ```bash
 wget https://raw.githubusercontent.com/gavinbarrett/app-reaction/master/conjure-react
-chmox +x conjure-react
 ```
 
 Then run:
