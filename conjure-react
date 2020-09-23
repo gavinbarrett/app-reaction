@@ -86,7 +86,7 @@ make_node() {
 	# start the server
 	node server.js &
 	# open app
-	firefox localhost:8080
+	#firefox localhost:8080
 }
 
 make_python() {
@@ -138,7 +138,7 @@ make_python() {
 	python server.py &
 
 	# open the page in firefox
-	firefox localhost:5000 &
+	#firefox localhost:5000 &
 }
 
 if [ $# -eq 0 ]

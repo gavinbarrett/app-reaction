@@ -3,6 +3,8 @@ AppReaction is a small shell utility for setting up a React web application with
 
 This script will install React with a Babel/Webpack configuration for bundling.
 
+![](https://github.com/gavinbarrett/app-reaction/workflows/Node%20Build/badge.svg)
+
 # Usage
 ```bash
 wget https://raw.githubusercontent.com/gavinbarrett/app-reaction/master/conjure-react
